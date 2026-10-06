@@ -1055,6 +1055,7 @@
             result.playlists.forEach((playlist, index) => {
                 const card = document.createElement('div');
                 card.className = 'playlist-card';
+                card.id = `playlist-${playlist.id}`;
 
                 let vibesHTML = '';
                 if (playlist.vibes && playlist.vibes.length > 0) {
@@ -1077,10 +1078,10 @@
                         <a href="${playlist.url}" target="_blank" class="playlist-link">
                             PLAY ON SPOTIFY
                         </a>
-                        <button class="rename-button" onclick="toggleRenamePlaylist('${playlist.id}', '${playlist.name.replace(/'/g, "\\'")}')">
+                        <button class="rename-button" onclick="toggleRenamePlaylist('${playlist.id}')">
                             Rename
                         </button>
-                        <button class="delete-button" onclick="deletePlaylist('${playlist.id}', '${playlist.name}')">
+                        <button class="delete-button" onclick="deletePlaylist('${playlist.id}')">
                             Delete
                         </button>
                     </div>
@@ -1137,12 +1138,13 @@
             container.style.display = 'block';
         }
 
-        function toggleRenamePlaylist(playlistId, currentName) {
+        function toggleRenamePlaylist(playlistId) {
             const titleElement = document.getElementById(`title-${playlistId}`);
             if (titleElement.querySelector('input')) {
                 // Already in edit mode
                 return;
             }
+            const currentName = titleElement.textContent.trim();
             
             titleElement.innerHTML = `
                 <input type="text" class="edit-name-input" id="rename-input-${playlistId}" value="${currentName}">
@@ -1224,7 +1226,9 @@
             }, 5000);
         }
 
-        async function deletePlaylist(playlistId, playlistName) {
+        async function deletePlaylist(playlistId) {
+            const titleElement = document.getElementById(`title-${playlistId}`);
+            const playlistName = titleElement?.textContent.trim() || 'this playlist';
             if (!confirm(`Are you sure you want to delete "${playlistName}"? This action cannot be undone.`)) {
                 return;
             }
@@ -1245,13 +1249,7 @@
 
                 if (response.ok && result.success) {
                     showSuccess(`"${playlistName}" has been deleted successfully.`);
-                    // Remove the card from the DOM
-                    const cards = document.querySelectorAll('.playlist-card');
-                    cards.forEach(card => {
-                        if (card.textContent.includes(playlistName)) {
-                            card.remove();
-                        }
-                    });
+                    document.getElementById(`playlist-${playlistId}`)?.remove();
                 } else {
                     showError(result.error || 'Failed to delete playlist');
                 }

@@ -146,7 +146,7 @@ def login():
         show_dialog=True
     )
     auth_url = sp_oauth.get_authorize_url()
-    return jsonify({'auth_url': auth_url})
+    return redirect(auth_url)
 
 @app.route('/callback', methods=['GET'])
 def callback():

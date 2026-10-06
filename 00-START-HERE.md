@@ -4,4 +4,4 @@ VibeMap runs locally on your computer. Download the project from GitHub, configu
 
 Follow [README.md](README.md) for requirements, setup, run instructions, and troubleshooting.
 
-The app is opened at `http://127.0.0.1:5000` after running `python app.py`.
+The app is at default opened at `http://127.0.0.1:5000` after running `python app.py`.

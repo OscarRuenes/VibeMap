@@ -519,16 +519,13 @@ class VibeProcessor:
     def process_playlist(self, token, user_id, playlist_name=None, playlist_id=None, num_clusters=None, refresh_token_callback=None):
         """Main processing function"""
         self.refresh_token_callback = refresh_token_callback
+        self.current_song = None
+        self.current_song_image = None
+        self.current_index = 0
+        self.total_songs = 0
+        self.skipped_tracks = []
         try:
             fast_mode = os.getenv("AUDIO_FEATURES_ONLY", "").lower() in {"1", "true", "yes"}
-            # Lazy load model on first use
-            if not fast_mode and not self.model_loaded:
-                if os.getenv("CLAP_DISABLED", "").lower() in {"1", "true", "yes"}:
-                    self.use_lightweight = True
-                    print("⚠ CLAP disabled. Using lightweight embeddings (MFCC).")
-                else:
-                    if not self.load_model():
-                        print("⚠ Falling back to lightweight embeddings (MFCC).")
             
             sp = spotipy.Spotify(auth=token)
             
@@ -573,7 +570,15 @@ class VibeProcessor:
             
             # Initialize progress tracking
             self.total_songs = len(tracks)
-            self.skipped_tracks = []
+            self.current_index = 0
+
+            # Load the model after setting the playlist total so progress is meaningful during startup.
+            if not fast_mode and not self.model_loaded:
+                if os.getenv("CLAP_DISABLED", "").lower() in {"1", "true", "yes"}:
+                    self.use_lightweight = True
+                    print("⚠ CLAP disabled. Using lightweight embeddings (MFCC).")
+                elif not self.load_model():
+                    print("⚠ Falling back to lightweight embeddings (MFCC).")
             
             # Process tracks and generate embeddings
             dataset = []
