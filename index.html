@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeMap - AI Playlist Curator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #121212;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #191414;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid #282828;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            order: -1;
+            margin-top: -20px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .logo-full {
+            display: block;
+            max-width: 120px;
+        }
+
+        .logo-icon {
+            display: none;
+            max-width: 50px;
+        }
+
+        @media (max-width: 600px) {
+            .logo-full {
+                display: none;
+            }
+
+            .logo-icon {
+                display: block;
+            }
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 56px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #b3b3b3;
+            font-size: 16px;
+        }
+
+        .login-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .spotify-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #1ED760;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            text-decoration: none;
+        }
+
+        .spotify-button:hover {
+            background: #1ed760;
+            transform: scale(1.05);
+        }
+
+        .spotify-button:active {
+            transform: scale(0.98);
+        }
+
+        .user-info {
+            background: #282828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            border: 1px solid #404040;
+        }
+
+        .user-info.visible {
+            display: block;
+        }
+
+        .user-info p {
+            color: #b3b3b3;
+            margin: 5px 0;
+        }
+
+        .user-info strong {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .form-group.visible {
+            display: block;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: #282828;
+            color: #fff;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #1ED760;
+        }
+        .playlist-search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .playlist-search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #282828;
+            color: #fff;
+            transition: border-color 0.3s;
+        }
+
+        .playlist-search-input:focus {
+            outline: none;
+            border-color: #1DB954;
+        }
+
+        .playlist-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #282828;
+            border: 2px solid #1DB954;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .playlist-dropdown.visible {
+            display: block;
+        }
+
+        .playlist-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #404040;
+            transition: background 0.2s;
+        }
+
+        .playlist-item:hover {
+            background: #191414;
+        }
+
+        .playlist-item.selected {
+            background: #1DB954;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .playlist-item-text {
+            display: block;
+        }
+
+        .playlist-item-songs {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background: #1ED760;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            transform: scale(1.02);
+            background: #1ed760;
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .logout-button {
+            background: #282828;
+            color: #fff;
+            border: 1px solid #404040;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .logout-button:hover {
+            background: #1ED760;
+        }
+
+        .loading {
+            text-align: center;
+            display: none;
+            margin: 20px 0;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #404040;
+            border-top: 4px solid #1ED760;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .results.visible {
+            display: block;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .results-header h2 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .results-header p {
+            color: #b3b3b3;
+        }
+
+        .playlist-card {
+            background: #282828;
+            border: 2px solid #404040;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .playlist-card:hover {
+            border-color: #1ED760;
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.2);
+        }
+
+        .playlist-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .playlist-vibes {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .vibe-tag {
+            background: #1ED760;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .playlist-info {
+            color: #b3b3b3;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .sample-songs {
+            background: #191414;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #404040;
+        }
+
+        .sample-songs p {
+            font-size: 12px;
+            color: #b3b3b3;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .song-item {
+            color: #b3b3b3;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+
+        .playlist-link {
+            display: inline-block;
+            background: #1ED760;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .playlist-link:hover {
+            background: #1ed760;
+        }
+
+        .delete-button {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+
+        .delete-button:hover {
+            background: #c0392b;
+        }
+
+        .rename-button {
+            display: inline-block;
+            background: #1ED760;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+
+        .rename-button:hover {
+            background: #1dd559;
+        }
+
+        .edit-name-input {
+            background: #191414;
+            border: 1px solid #1ED760;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .edit-name-input:focus {
+            outline: none;
+            border-color: #1ED760;
+        }
+
+        .top-tracks {
+            background: #191414;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #404040;
+        }
+
+        .top-tracks-title {
+            font-size: 12px;
+            color: #b3b3b3;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .track-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #282828;
+            border-radius: 6px;
+            align-items: center;
+        }
+
+        .track-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .track-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .track-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-name {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist {
+            color: #b3b3b3;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .error {
+            background: #3a1a1a;
+            border: 2px solid #ff6b6b;
+            color: #ff8a8a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+        }
+
+        .success {
+            background: #1a3a1a;
+            border: 2px solid #51cf66;
+            color: #51cf66;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success.visible {
+            display: block;
+        }
+
+        .back-button {
+            background: #282828;
+            color: #fff;
+            border: 1px solid #404040;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #1ED760;
+        }
+
+        .input-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-button {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #404040;
+            background: #282828;
+            color: #b3b3b3;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .mode-button.active {
+            border-color: #1ED760;
+            color: #1ED760;
+            background: #1a3a1a;
+        }
+
+        .mode-button:hover {
+            border-color: #1ED760;
+        }
+
+        .spotify-attribution {
+            text-align: center;
+            color: #b3b3b3;
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #404040;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 40px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .playlist-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Full logo for larger screens -->
+            <img class="logo logo-full" src="assets/spotify-logos/full-logo-white.png" alt="Spotify VibeMap">
+            <!-- Icon for smaller screens -->
+            <img class="logo logo-icon" src="assets/spotify-logos/icon-green.png" alt="Spotify VibeMap">
+            <h1>VibeMap</h1>
+            <p class="subtitle">AI-powered playlist curator powered by Spotify. Simply login to Spotify, select a playlist you want to split into vibe-based playlists, and optionally select how many playlists you want to create!</p>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
+
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <p style="color: #b3b3b3; margin-bottom: 20px;">Login with Spotify to get started</p>
+            <button class="spotify-button" id="loginBtn">
+                Login with Spotify
+            </button>
+        </div>
+
+        <!-- User Info -->
+        <div class="user-info" id="userInfo">
+            <p>Logged in as <strong id="userName"></strong></p>
+            <button class="logout-button" id="logoutBtn">Logout</button>
+        </div>
+
+        <!-- Main Form -->
+        <form id="processForm" style="display: none;">
+            <div class="input-mode-toggle">
+                <button type="button" class="mode-button active" id="myPlaylistsMode" onclick="switchMode('my-playlists')">My Playlists</button>
+                <button type="button" class="mode-button" id="urlMode" onclick="switchMode('url')">Spotify URL</button>
+            </div>
+
+            <!-- My Playlists Mode -->
+            <div class="form-group visible" id="myPlaylistsForm">
+                <label for="playlistSearch">Select Playlist *</label>
+                <div class="playlist-search-container">
+                    <input 
+                        type="text" 
+                        id="playlistSearch" 
+                        class="playlist-search-input"
+                        placeholder="Search your playlists..." 
+                        autocomplete="off">
+                    <div class="playlist-dropdown" id="playlistDropdown"></div>
+                </div>
+                <input type="hidden" id="playlistName">
+            </div>
+
+            <!-- URL Mode -->
+            <div class="form-group" id="urlForm" style="display: none;">
+                <label for="playlistUrl">Spotify Playlist URL or URI *</label>
+                <input 
+                    type="text" 
+                    id="playlistUrl" 
+                    placeholder="Paste Spotify playlist link (e.g., https://open.spotify.com/playlist/...)" 
+                    autocomplete="off">
+                <p style="font-size: 12px; color: #999; margin-top: 5px;">Right-click a playlist in Spotify and select "Copy playlist link"</p>
+                <input type="hidden" id="playlistUrlValue">
+            </div>
+
+            <div class="form-group visible">
+                <label for="numClusters">Number of Playlists (optional)</label>
+                <input type="number" id="numClusters" min="2" max="20" placeholder="Leave blank for auto-detection">
+                <p style="font-size: 12px; color: #999; margin-top: 5px;">VibeMap will auto-detect if left blank</p>
+            </div>
+
+            <button type="submit" class="submit-button">Process Playlist</button>
+        </form>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p id="progressText" style="color: #fff;">Processing your playlist...</p>
+            
+            <!-- Album Artwork Display -->
+            <div id="currentSongArt" style="text-align: center; margin: 20px auto; display: flex; justify-content: center; align-items: center;">
+                <img id="albumArt" src="" alt="Album Art" style="max-width: 200px; max-height: 200px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: none;">
+            </div>
+            
+            <div style="background: #282828; border-radius: 10px; margin-top: 20px; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 8px; background: #1ED760; transition: width 0.3s;"></div>
+            </div>
+            <p id="songText" style="font-size: 12px; color: #b3b3b3; margin-top: 10px;">Initializing...</p>
+            <p style="font-size: 12px; color: #999; margin-top: 10px;">This may take a few minutes depending on playlist size</p>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="resultsSection">
+            <div class="results-header">
+                <h2 id="resultsTitle">Your VibeMap Playlists</h2>
+                <p id="resultsSummary"></p>
+            </div>
+            <div id="playlistsContainer"></div>
+            <button class="back-button" id="backButton">Create Another Mix</button>
+        </div>
+
+        <div class="spotify-attribution">
+            <p style="margin: 0;">VibeMap uses the Spotify Web API to analyze and organize your playlists.</p>
+            <p style="margin: 10px 0 0 0; font-size: 11px;">Spotify® is a registered trademark of Spotify AB. This app is not endorsed or certified by Spotify.</p>
+            <p style="margin: 15px 0 0 0; font-size: 12px; color: #999;">Made by <a href="https://oscarruecam.com/" style="color: #1DB954; text-decoration: none;" target="_blank">Oscar Ruenes Campos</a> and <a href="https://www.linkedin.com/in/lalith-vennapusa-90812323a/" style="color: #1DB954; text-decoration: none;" target="_blank">Lalith Vennapusa</a>.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        let authToken = localStorage.getItem('spotify_token');
+        let progressInterval = null;
+
+        // DOM Elements
+        const loginSection = document.getElementById('loginSection');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const processForm = document.getElementById('processForm');
+        const loadingState = document.getElementById('loadingState');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const backButton = document.getElementById('backButton');
+        const playlistSearch = document.getElementById('playlistSearch');
+        const playlistDropdown = document.getElementById('playlistDropdown');
+        const playlistName = document.getElementById('playlistName');
+
+        let userPlaylists = [];
+
+        // Event Listeners
+        loginBtn.addEventListener('click', handleLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        processForm.addEventListener('submit', handleProcessPlaylist);
+        backButton.addEventListener('click', resetForm);
+        playlistSearch.addEventListener('focus', showPlaylistDropdown);
+        playlistSearch.addEventListener('input', filterPlaylists);
+        document.addEventListener('click', handleClickOutside);
+
+        // Mode switching
+        let currentMode = 'my-playlists';
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const myPlaylistsForm = document.getElementById('myPlaylistsForm');
+            const urlForm = document.getElementById('urlForm');
+            const myPlaylistsMode = document.getElementById('myPlaylistsMode');
+            const urlModeBtn = document.getElementById('urlMode');
+
+            if (mode === 'my-playlists') {
+                myPlaylistsForm.style.display = 'block';
+                urlForm.style.display = 'none';
+                myPlaylistsMode.classList.add('active');
+                urlModeBtn.classList.remove('active');
+                document.getElementById('playlistName').value = '';
+            } else {
+                myPlaylistsForm.style.display = 'none';
+                urlForm.style.display = 'block';
+                myPlaylistsMode.classList.remove('active');
+                urlModeBtn.classList.add('active');
+                document.getElementById('playlistUrl').value = '';
+            }
+        }
+
+        function extractPlaylistIdFromUrl(url) {
+            // Handle spotify:playlist:ID format
+            if (url.includes('spotify:playlist:')) {
+                return url.split('spotify:playlist:')[1];
+            }
+            // Handle https://open.spotify.com/playlist/ID format
+            if (url.includes('open.spotify.com/playlist/')) {
+                const id = url.split('open.spotify.com/playlist/')[1];
+                // Remove query parameters if present
+                return id.split('?')[0];
+            }
+            // If it's just an ID
+            if (url.match(/^[a-zA-Z0-9]{22}$/)) {
+                return url;
+            }
+            return null;
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'spotify_auth_success') {
+                authToken = event.data.token;
+                localStorage.setItem('spotify_token', authToken);
+                updateUIAfterLogin();
+            }
+        });
+
+        if (authToken) {
+            updateUIAfterLogin();
+        }
+
+        function handleLogin() {
+            // Open Spotify login in popup (backend redirects to Spotify)
+            window.open(`${API_URL}/login`, 'Spotify Login', 'width=500,height=600');
+        }
+
+        async function updateUIAfterLogin() {
+            try {
+                const response = await fetch(`${API_URL}/get-user`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    userName.textContent = user.display_name;
+                    loginSection.style.display = 'none';
+                    userInfo.classList.add('visible');
+                    processForm.style.display = 'block';
+                    loadUserPlaylists();
+                    showSuccess('Successfully logged in!');
+                } else {
+                    const errorText = await response.text();
+                    localStorage.removeItem('spotify_token');
+                    authToken = null;
+                    resetUI();
+                    showError(`Login failed: ${response.status} ${errorText || ''}`.trim());
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                showError('Login failed: ' + error.message);
+            }
+        }
+
+        async function loadUserPlaylists() {
+            try {
+                const response = await fetch(`${API_URL}/get-user-playlists`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    userPlaylists = await response.json();
+                    renderPlaylistDropdown(userPlaylists);
+                } else if (response.status === 401) {
+                    showError('Session expired. Please log in again.');
+                    resetUI();
+                }
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+            }
+        }
+
+        function renderPlaylistDropdown(playlists) {
+            playlistDropdown.innerHTML = '';
+            playlists.forEach(playlist => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                item.innerHTML = `
+                    <span class="playlist-item-text">${playlist.name}</span>
+                    <span class="playlist-item-songs">${playlist.tracks.total} songs</span>
+                `;
+                item.addEventListener('click', () => selectPlaylist(playlist));
+                playlistDropdown.appendChild(item);
+            });
+        }
+
+        function showPlaylistDropdown() {
+            if (userPlaylists.length > 0) {
+                playlistDropdown.classList.add('visible');
+                renderPlaylistDropdown(userPlaylists);
+            }
+        }
+
+        function filterPlaylists(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = userPlaylists.filter(p => p.name.toLowerCase().includes(query));
+            renderPlaylistDropdown(filtered.length > 0 ? filtered : userPlaylists);
+            playlistDropdown.classList.add('visible');
+        }
+
+        function selectPlaylist(playlist) {
+            playlistName.value = playlist.name;
+            playlistSearch.value = playlist.name;
+            playlistDropdown.classList.remove('visible');
+        }
+
+        function handleClickOutside(e) {
+            if (!e.target.closest('.playlist-search-container')) {
+                playlistDropdown.classList.remove('visible');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch(`${API_URL}/logout`, { method: 'POST' });
+                authToken = null;
+                localStorage.removeItem('spotify_token');
+                resetUI();
+                showSuccess('Logged out successfully');
+            } catch (error) {
+                showError('Logout failed: ' + error.message);
+            }
+        }
+
+        async function handleProcessPlaylist(e) {
+            e.preventDefault();
+
+            // Check if user is logged in
+            if (!authToken) {
+                showError('Please log in first to process a playlist');
+                return;
+            }
+
+            let playlistData = {};
+            const numClustersInput = document.getElementById('numClusters').value;
+
+            if (currentMode === 'my-playlists') {
+                const playlistName = document.getElementById('playlistName').value;
+                if (!playlistName.trim()) {
+                    showError('Please select a playlist');
+                    return;
+                }
+                playlistData.playlist_name = playlistName;
+            } else {
+                const playlistUrl = document.getElementById('playlistUrl').value.trim();
+                if (!playlistUrl) {
+                    showError('Please enter a playlist URL');
+                    return;
+                }
+                const playlistId = extractPlaylistIdFromUrl(playlistUrl);
+                if (!playlistId) {
+                    showError('Invalid Spotify playlist URL. Please make sure the URL is correct.');
+                    return;
+                }
+                playlistData.playlist_url = playlistUrl;
+                playlistData.playlist_id = playlistId;
+            }
+
+            const parsedClusters = numClustersInput ? parseInt(numClustersInput, 10) : NaN;
+            playlistData.num_clusters = Number.isFinite(parsedClusters) ? parsedClusters : 4;
+
+            // Show loading state
+            processForm.style.display = 'none';
+            loadingState.classList.add('visible');
+            errorMessage.classList.remove('visible');
+            
+            // Start polling for progress
+            startProgressPolling();
+
+            try {
+                const response = await fetch(`${API_URL}/process-playlist`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(playlistData)
+                });
+
+                const result = await response.json();
+                
+                // Stop progress polling
+                stopProgressPolling();
+
+                if (response.ok && result.success) {
+                    displayResults(result);
+                } else {
+                    showError(result.error || 'Failed to process playlist');
+                    resetForm();
+                }
+            } catch (error) {
+                stopProgressPolling();
+                showError('Error: ' + error.message);
+                resetForm();
+            }
+        }
+
+        function startProgressPolling() {
+            const pollOnce = async () => {
+                try {
+                    const response = await fetch(`${API_URL}/progress`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Update progress bar
+                        document.getElementById('progressBar').style.width = data.progress_percent + '%';
+                        
+                        // Update progress text
+                        const progressText = document.getElementById('progressText');
+                        progressText.textContent = `Processing: ${data.current_index}/${data.total_songs} songs`;
+                        
+                        // Update current song
+                        const songText = document.getElementById('songText');
+                        if (data.current_song) {
+                            songText.textContent = `Current: ${data.current_song}${data.skipped_count > 0 ? ` (${data.skipped_count} skipped)` : ''}`;
+                        }
+                        
+                        // Update album artwork
+                        const albumArt = document.getElementById('albumArt');
+                        if (data.current_song_image) {
+                            albumArt.src = data.current_song_image;
+                            albumArt.style.display = 'block';
+                        } else {
+                            albumArt.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    // Silently fail, progress polling is optional
+                }
+            };
+
+            pollOnce();
+            progressInterval = setInterval(pollOnce, 1000);  // Poll every 1 second
+        }
+
+        function stopProgressPolling() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+
+        function displayResults(result) {
+            loadingState.classList.remove('visible');
+            resultsSection.classList.add('visible');
+
+            // Update title based on source
+            const resultsTitle = document.getElementById('resultsTitle');
+            if (result.creator_name && result.original_playlist_name) {
+                resultsTitle.textContent = `VibeMap Playlists from ${result.creator_name}'s "${result.original_playlist_name}" playlist`;
+            } else {
+                resultsTitle.textContent = 'Your VibeMap Playlists';
+            }
+
+            const summary = document.getElementById('resultsSummary');
+            summary.textContent = `${result.playlists.length} playlists created • ${result.total_songs_processed} songs analyzed`;
+
+            const container = document.getElementById('playlistsContainer');
+            container.innerHTML = '';
+
+            result.playlists.forEach((playlist, index) => {
+                const card = document.createElement('div');
+                card.className = 'playlist-card';
+
+                let vibesHTML = '';
+                if (playlist.vibes && playlist.vibes.length > 0) {
+                    vibesHTML = `<div class="playlist-vibes">
+                        ${playlist.vibes.map(v => `<span class="vibe-tag">${v[0]}</span>`).join('')}
+                    </div>`;
+                }
+
+                let samplesHTML = '';
+
+                card.innerHTML = `
+                    <div class="playlist-title" id="title-${playlist.id}">${playlist.name}</div>
+                    <div id="top-tracks-${playlist.id}" class="top-tracks" style="display: none;"><p class="top-tracks-title">Loading top tracks...</p></div>
+                    ${vibesHTML}
+                    <div class="playlist-info">
+                        <strong>${playlist.song_count}</strong> songs
+                    </div>
+                    ${samplesHTML}
+                    <div style="margin-top: 12px;">
+                        <a href="${playlist.url}" target="_blank" class="playlist-link">
+                            PLAY ON SPOTIFY
+                        </a>
+                        <button class="rename-button" onclick="toggleRenamePlaylist('${playlist.id}', '${playlist.name.replace(/'/g, "\\'")}')">
+                            Rename
+                        </button>
+                        <button class="delete-button" onclick="deletePlaylist('${playlist.id}', '${playlist.name}')">
+                            Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+                
+                // Load top tracks
+                loadTopTracks(playlist.id);
+            });
+        }
+
+        async function loadTopTracks(playlistId) {
+            try {
+                const response = await fetch(`${API_URL}/get-playlist-tracks`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playlist_id: playlistId,
+                        limit: 5
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTopTracks(playlistId, data.tracks);
+                }
+            } catch (error) {
+                console.error('Error loading top tracks:', error);
+            }
+        }
+
+        function displayTopTracks(playlistId, tracks) {
+            const container = document.getElementById(`top-tracks-${playlistId}`);
+            if (!tracks || tracks.length === 0) return;
+            
+            let tracksHTML = '<p class="top-tracks-title">Top Tracks:</p>';
+            tracks.forEach(track => {
+                const imageHTML = track.image_url ? `<img src="${track.image_url}" alt="${track.name}" class="track-image">` : '<div class="track-image" style="background: #404040;"></div>';
+                tracksHTML += `
+                    <div class="track-row">
+                        ${imageHTML}
+                        <div class="track-info">
+                            <div class="track-name">${track.name}</div>
+                            <div class="track-artist">${track.artist}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = tracksHTML;
+            container.style.display = 'block';
+        }
+
+        function toggleRenamePlaylist(playlistId, currentName) {
+            const titleElement = document.getElementById(`title-${playlistId}`);
+            if (titleElement.querySelector('input')) {
+                // Already in edit mode
+                return;
+            }
+            
+            titleElement.innerHTML = `
+                <input type="text" class="edit-name-input" id="rename-input-${playlistId}" value="${currentName}">
+                <button style="background: #1ED760; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" onclick="savePlaylistName('${playlistId}')">Save</button>
+                <button style="background: #404040; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" onclick="cancelRename('${playlistId}', '${currentName}')">Cancel</button>
+            `;
+            
+            const input = document.getElementById(`rename-input-${playlistId}`);
+            input.focus();
+            input.select();
+        }
+
+        function cancelRename(playlistId, originalName) {
+            const titleElement = document.getElementById(`title-${playlistId}`);
+            titleElement.textContent = originalName;
+        }
+
+        async function savePlaylistName(playlistId) {
+            const input = document.getElementById(`rename-input-${playlistId}`);
+            const newName = input.value.trim();
+            
+            if (!newName) {
+                showError('Playlist name cannot be empty');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/rename-playlist`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playlist_id: playlistId,
+                        new_name: newName
+                    })
+                });
+                
+                if (response.ok) {
+                    const titleElement = document.getElementById(`title-${playlistId}`);
+                    titleElement.textContent = newName;
+                    showSuccess(`Playlist renamed to "${newName}"`);
+                } else {
+                    showError('Failed to rename playlist');
+                }
+            } catch (error) {
+                showError('Error renaming playlist: ' + error.message);
+            }
+        }
+
+        function resetForm() {
+            stopProgressPolling();
+            document.getElementById('playlistName').value = '';
+            document.getElementById('numClusters').value = '';
+            loadingState.classList.remove('visible');
+            resultsSection.classList.remove('visible');
+            processForm.style.display = 'block';
+            errorMessage.classList.remove('visible');
+        }
+
+        function resetUI() {
+            loginSection.style.display = 'block';
+            userInfo.classList.remove('visible');
+            processForm.style.display = 'none';
+            resetForm();
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('visible');
+            setTimeout(() => {
+                successMessage.classList.remove('visible');
+            }, 5000);
+        }
+
+        async function deletePlaylist(playlistId, playlistName) {
+            if (!confirm(`Are you sure you want to delete "${playlistName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/delete-playlist`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        playlist_id: playlistId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showSuccess(`"${playlistName}" has been deleted successfully.`);
+                    // Remove the card from the DOM
+                    const cards = document.querySelectorAll('.playlist-card');
+                    cards.forEach(card => {
+                        if (card.textContent.includes(playlistName)) {
+                            card.remove();
+                        }
+                    });
+                } else {
+                    showError(result.error || 'Failed to delete playlist');
+                }
+            } catch (error) {
+                showError('Error deleting playlist: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
