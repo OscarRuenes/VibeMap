@@ -10,7 +10,7 @@ import secrets
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='assets', static_url_path='/assets')
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
 
 # Spotify Configuration
